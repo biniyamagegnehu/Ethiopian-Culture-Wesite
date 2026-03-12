@@ -31,6 +31,14 @@ const TaskCard = ({ task, onToggle, onDelete, onUpdate }) => {
     }
   };
 
+  const formatDate = (date) => {
+    try {
+      return formatDistanceToNow(new Date(date), { addSuffix: true });
+    } catch (error) {
+      return 'Invalid date';
+    }
+  };
+
   return (
     <motion.div
       layout
@@ -80,7 +88,7 @@ const TaskCard = ({ task, onToggle, onDelete, onUpdate }) => {
                 value={editedTitle}
                 onChange={(e) => setEditedTitle(e.target.value)}
                 onBlur={handleUpdate}
-                onKeyPress={(e) => e.key === 'Enter' && handleUpdate()}
+                onKeyDown={(e) => e.key === 'Enter' && handleUpdate()}
                 className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-1 text-white focus:outline-none focus:border-purple-500"
                 autoFocus
               />
@@ -158,7 +166,7 @@ const TaskCard = ({ task, onToggle, onDelete, onUpdate }) => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
               <CalendarIcon className="w-3 h-3" />
-              <span>{formatDistanceToNow(new Date(task.createdAt), { addSuffix: true })}</span>
+              <span>{formatDate(task.createdAt)}</span>
             </div>
             {task.priority && (
               <div className={`flex items-center gap-1 px-2 py-1 rounded-full bg-gradient-to-r ${priorityColors[task.priority]} bg-opacity-20`}>
@@ -171,7 +179,7 @@ const TaskCard = ({ task, onToggle, onDelete, onUpdate }) => {
           {task.completed && task.completedAt && (
             <div className="flex items-center gap-1 text-green-400">
               <CheckCircleIcon className="w-3 h-3" />
-              <span>Completed {formatDistanceToNow(new Date(task.completedAt), { addSuffix: true })}</span>
+              <span>Completed {formatDate(task.completedAt)}</span>
             </div>
           )}
         </div>

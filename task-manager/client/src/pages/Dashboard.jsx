@@ -28,11 +28,24 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
-  const [stats, setStats] = useState({ total: 0, completed: 0, pending: 0 });
+  const [stats, setStats] = useState({ total: 0, completed: 0, pending: 0, completionRate: 0 });
   const [showAddForm, setShowAddForm] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const formatDate = (date) => {
+    try {
+      return new Date(date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return 'Invalid date';
+    }
+  };
 
   useEffect(() => {
     fetchTasks();
@@ -174,13 +187,16 @@ const Dashboard = () => {
     <div className="min-h-screen relative">
       {/* Animated background */}
       <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%239C92AC" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+        <div className="absolute inset-0 opacity-20" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundRepeat: 'repeat'
+        }} />
       </div>
 
       {/* Floating particles */}
       {[...Array(30)].map((_, i) => (
         <motion.div
-          key={i}
+          key={`particle-${i}`}
           className="fixed w-1 h-1 bg-white/10 rounded-full"
           animate={{
             x: [0, Math.random() * 200 - 100],
@@ -199,12 +215,13 @@ const Dashboard = () => {
         />
       ))}
 
+      {/* Main content - using a div instead of fragment to avoid ref issues */}
       <div className="relative z-10">
         {/* Header */}
         <motion.header
           initial={{ y: -100 }}
           animate={{ y: 0 }}
-          className="glass-morphism sticky top-0 z-50 border-b border-white/10"
+          className="sticky top-0 z-50 backdrop-blur-xl bg-white/5 border-b border-white/10"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
@@ -212,10 +229,10 @@ const Dashboard = () => {
                 whileHover={{ scale: 1.05 }}
                 className="flex items-center gap-3"
               >
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 p-2 floating">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-purple-500 via-pink-500 to-orange-500 p-2 animate-float">
                   <SparklesIcon className="w-full h-full text-white" />
                 </div>
-                <h1 className="text-2xl font-bold gradient-text">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 text-transparent bg-clip-text">
                   TaskFlow
                 </h1>
               </motion.div>
@@ -234,7 +251,7 @@ const Dashboard = () => {
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  className="flex items-center gap-3 px-4 py-2 glass-card"
+                  className="flex items-center gap-3 px-4 py-2 backdrop-blur-xl bg-white/5 rounded-xl border border-white/10"
                 >
                   <UserCircleIcon className="w-6 h-6 text-purple-400" />
                   <span className="text-white font-medium hidden sm:block">
@@ -294,14 +311,14 @@ const Dashboard = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className={`glass-card p-6 bg-gradient-to-br ${stat.bg}`}
+                className={`relative overflow-hidden rounded-2xl backdrop-blur-xl bg-white/5 border border-white/10 p-6 bg-gradient-to-br ${stat.bg}`}
               >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-gray-400 text-sm">{stat.label}</p>
                     <p className="text-3xl font-bold text-white mt-2">{stat.value}</p>
                   </div>
-                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.gradient} p-3 floating`}>
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.gradient} p-3 animate-float`}>
                     <stat.icon className="w-full h-full text-white" />
                   </div>
                 </div>
@@ -368,7 +385,7 @@ const Dashboard = () => {
                   exit={{ opacity: 0, height: 0 }}
                   className="overflow-hidden"
                 >
-                  <div className="glass-card p-4">
+                  <div className="backdrop-blur-xl bg-white/5 rounded-xl border border-white/10 p-4">
                     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                       <div className="flex flex-wrap gap-3">
                         <div className="space-y-1">
@@ -441,7 +458,7 @@ const Dashboard = () => {
                 exit={{ opacity: 0, y: -20 }}
                 className="mb-6"
               >
-                <form onSubmit={handleSubmit} className="glass-card p-6">
+                <form onSubmit={handleSubmit} className="backdrop-blur-xl bg-white/5 rounded-xl border border-white/10 p-6">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-lg font-semibold text-white">Create New Task</h3>
                     <motion.button
@@ -504,7 +521,7 @@ const Dashboard = () => {
                 exit={{ opacity: 0 }}
                 className="text-center py-20"
               >
-                <div className="w-32 h-32 mx-auto mb-6 text-gray-400 floating">
+                <div className="w-32 h-32 mx-auto mb-6 text-gray-400 animate-float">
                   <SparklesIcon className="w-full h-full" />
                 </div>
                 <h3 className="text-2xl font-semibold text-white mb-2">No tasks found</h3>
@@ -526,7 +543,8 @@ const Dashboard = () => {
                 )}
               </motion.div>
             ) : (
-              <>
+              // Changed from fragment to div to avoid ref issues
+              <div>
                 <div className="flex justify-between items-center mb-4">
                   <p className="text-gray-400">
                     Showing {filteredTasks.length} of {tasks.length} tasks
@@ -548,7 +566,7 @@ const Dashboard = () => {
                     ))}
                   </AnimatePresence>
                 </motion.div>
-              </>
+              </div>
             )}
           </AnimatePresence>
         </main>

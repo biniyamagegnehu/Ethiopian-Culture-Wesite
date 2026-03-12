@@ -19,6 +19,8 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (token) {
+      // Set default authorization header for all axios requests
+      API.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       fetchUser();
     } else {
       setLoading(false);
@@ -30,8 +32,10 @@ export const AuthProvider = ({ children }) => {
       const response = await API.get('/auth/me');
       setUser(response.data.user);
     } catch (error) {
+      console.error('Error fetching user:', error);
       localStorage.removeItem('token');
       setToken(null);
+      delete API.defaults.headers.common['Authorization'];
     } finally {
       setLoading(false);
     }
@@ -42,19 +46,16 @@ export const AuthProvider = ({ children }) => {
       const response = await API.post('/auth/login', { email, password });
       const { token, user } = response.data;
       
+      // Store token
       localStorage.setItem('token', token);
+      
+      // Set default header
+      API.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
       setToken(token);
       setUser(user);
       
-      toast.success('Welcome back! 🎉', {
-        icon: '👋',
-        style: {
-          borderRadius: '10px',
-          background: '#333',
-          color: '#fff',
-        },
-      });
-      
+      toast.success('Welcome back! 🎉');
       return { success: true };
     } catch (error) {
       const message = error.response?.data?.message || 'Login failed';
@@ -68,19 +69,16 @@ export const AuthProvider = ({ children }) => {
       const response = await API.post('/auth/register', { name, email, password });
       const { token, user } = response.data;
       
+      // Store token
       localStorage.setItem('token', token);
+      
+      // Set default header
+      API.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      
       setToken(token);
       setUser(user);
       
-      toast.success('Account created successfully! 🚀', {
-        icon: '🎉',
-        style: {
-          borderRadius: '10px',
-          background: '#333',
-          color: '#fff',
-        },
-      });
-      
+      toast.success('Account created successfully! 🚀');
       return { success: true };
     } catch (error) {
       const message = error.response?.data?.message || 'Registration failed';
@@ -91,6 +89,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    delete API.defaults.headers.common['Authorization'];
     setToken(null);
     setUser(null);
     toast.success('Logged out successfully! 👋');
